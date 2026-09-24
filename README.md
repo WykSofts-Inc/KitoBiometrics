@@ -1,5 +1,7 @@
 # KitoBiometrics
 
+**[Documentation](https://wyksofts-inc.github.io/KitoBiometrics/documentation/kitobiometrics/)**
+
 Face ID / Touch ID behind a small async API, four lock-screen styles, an
 animated biometric glyph, a "protect this action" modifier and an app lock.
 
