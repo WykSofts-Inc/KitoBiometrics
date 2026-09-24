@@ -95,6 +95,8 @@ public struct KitoBiometricGlyph: View {
                     KitoFaceFeaturesShape()
                         .stroke(color, style: StrokeStyle(lineWidth: max(size * 0.045, 1.8), lineCap: .round, lineJoin: .round))
                         .frame(width: size * 0.5, height: size * 0.5)
+                        // Matches the system Face ID mark, which does not mirror in right-to-left layouts.
+                        .environment(\.layoutDirection, .leftToRight)
                         .transition(.opacity)
                 }
             }
