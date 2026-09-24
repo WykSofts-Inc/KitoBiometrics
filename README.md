@@ -53,6 +53,13 @@ The simulator usually has no enrolled face, so pass
 `authenticator: KitoSimulatedBiometricAuthenticator(result: .success)` (or
 `KitoFlakyBiometricAuthenticator(failures: 2)`) to any view above.
 
+## Right-to-left
+
+Lock screens and buttons mirror automatically in right-to-left layouts. The passcode keypad and its
+dots stay left to right (1-2-3 on top, like the system keypad, since numbers read left to right in
+every script), and the drawn Face ID mark stays unmirrored like the system glyph. Copy is English;
+localise the titles you pass in.
+
 ## Samples
 
 **Direct check:**

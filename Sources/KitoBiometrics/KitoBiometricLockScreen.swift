@@ -262,6 +262,7 @@ public struct KitoBiometricLockScreen: View {
                         .scaleEffect(index == entered.count - 1 ? 1.15 : 1)
                 }
             }
+            .environment(\.layoutDirection, .leftToRight) // digits fill left to right, like the keypad
             .modifier(KitoShakeEffect(travel: dotsShake))
             .animation(reduceMotion ? nil : .spring(response: 0.25, dampingFraction: 0.6), value: entered)
             .accessibilityElement()
@@ -294,6 +295,8 @@ public struct KitoBiometricLockScreen: View {
             .foregroundStyle(theme.colors.onBackground)
             .buttonStyle(.plain)
         }
+        // A phone keypad keeps 1-2-3 left to right in every language, as the system one does.
+        .environment(\.layoutDirection, .leftToRight)
     }
 
     private func key(_ digit: String) -> some View {
