@@ -22,7 +22,7 @@ public enum KitoBiometricResult: Sendable {
 /// Wraps `LAContext` behind a small async API with a result type that
 /// distinguishes "the user cancelled" from "this device can't do this" from
 /// "wrong face" — three UI treatments that shouldn't share one error string.
-public struct KitoBiometricAuthenticator {
+public struct KitoBiometricAuthenticator: KitoBiometricAuthenticating {
     public init() {}
 
     public var availableBiometricType: KitoBiometricType {
