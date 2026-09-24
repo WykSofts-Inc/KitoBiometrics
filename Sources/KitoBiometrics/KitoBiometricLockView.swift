@@ -10,69 +10,42 @@ import SwiftUI
 import KitoCore
 
 /// Drop-in lock screen: shows a themed prompt, triggers Face ID/Touch ID on
-/// appear, and calls `onUnlock` once authentication succeeds. Wrap sensitive
-/// content in it — `KitoBiometricLockView { CardDetailsView() }`.
+/// appear, and reveals `content` once authentication succeeds. Wrap sensitive
+/// content in it — `KitoBiometricLockView { CardDetailsView() }` — and pick a
+/// look with `style:` (see `KitoBiometricLockStyle`).
 public struct KitoBiometricLockView<Content: View>: View {
-    @Environment(\.kitoTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isUnlocked = false
-    @State private var errorMessage: String?
 
     let reason: String
+    let style: KitoBiometricLockStyle
+    let authenticator: any KitoBiometricAuthenticating
     @ViewBuilder let content: () -> Content
-    private let authenticator = KitoBiometricAuthenticator()
 
-    public init(reason: String = "Unlock to continue", @ViewBuilder content: @escaping () -> Content) {
+    public init(
+        reason: String = "Unlock to continue",
+        style: KitoBiometricLockStyle = .minimal,
+        authenticator: any KitoBiometricAuthenticating = KitoBiometricAuthenticator(),
+        @ViewBuilder content: @escaping () -> Content
+    ) {
         self.reason = reason
+        self.style = style
+        self.authenticator = authenticator
         self.content = content
     }
 
     public var body: some View {
-        Group {
+        ZStack {
             if isUnlocked {
-                content()
+                content().transition(.opacity.combined(with: .scale(scale: 0.98)))
             } else {
-                lockedView
+                // No biometrics enrolled/available fails open (the lock screen's own rule)
+                // rather than permanently locking someone out with no fallback path.
+                KitoBiometricLockScreen(style: style, reason: reason, authenticator: authenticator) {
+                    withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(response: 0.5, dampingFraction: 0.85)) { isUnlocked = true }
+                }
+                .transition(.opacity)
             }
-        }
-        .task { await authenticate() }
-    }
-
-    private var lockedView: some View {
-        VStack(spacing: theme.spacing.lg) {
-            Image(systemName: authenticator.availableBiometricType == .faceID ? "faceid" : "touchid")
-                .font(.system(size: 48))
-                .foregroundStyle(theme.colors.primary)
-            Text("Locked")
-                .font(theme.typography.titleLarge)
-                .foregroundStyle(theme.colors.onBackground)
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(theme.typography.caption)
-                    .foregroundStyle(theme.colors.danger)
-            }
-            Button("Try again") { Task { await authenticate() } }
-                .font(theme.typography.button)
-                .foregroundStyle(theme.colors.primary)
-        }
-        .padding(theme.spacing.xl)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(theme.colors.background)
-    }
-
-    private func authenticate() async {
-        switch await authenticator.authenticate(reason: reason) {
-        case .success:
-            withAnimation { isUnlocked = true }
-            errorMessage = nil
-        case .failed(let reason):
-            errorMessage = reason
-        case .unavailable(let reason):
-            // No biometrics enrolled/available — fail open rather than
-            // permanently locking a user out with no fallback path.
-            errorMessage = reason
-            isUnlocked = true
-        case .userCancelled:
-            errorMessage = nil
         }
     }
 }
