@@ -41,6 +41,31 @@ RootView()
 
 It also blurs your content in the app switcher.
 
+### Know when the app is locked (1.2.0+)
+
+Pass `isLocked:` to keep your own flag in sync with the lock screen. Set it to `true` to lock right away.
+
+```swift
+RootView()
+    .kitoBiometricAppLock(isEnabled: settings.appLock, style: .glass, isLocked: $viewModel.isAppLocked)
+```
+
+Views inside the lock can read the same state from the environment, for example to hold a deep link
+or a notification tap until the owner unlocks. It reads `.locked` from the first frame when the app
+will lock on launch, so a link that cold-launches the app waits too.
+
+```swift
+@Environment(\.kitoBiometricAppLockState) private var appLockState
+
+TabsView()
+    .onOpenURL { url in
+        if appLockState == .locked { viewModel.pendingURL = url } else { viewModel.open(url) }
+    }
+    .onChange(of: appLockState) { _, state in
+        if state == .unlocked { viewModel.openPendingURL() }
+    }
+```
+
 ## The glyph on its own
 
 ```swift
