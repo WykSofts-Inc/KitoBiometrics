@@ -45,6 +45,10 @@ any view for previews and demos.
 - ``KitoBiometricLockView``
 - ``KitoBiometricLockStyle``
 
+### App Lock
+
+- ``KitoBiometricAppLockState``
+
 ### Glyph
 
 - ``KitoBiometricGlyph``

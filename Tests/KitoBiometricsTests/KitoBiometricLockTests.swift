@@ -6,6 +6,7 @@
 //  Copyright © 2026 wyksoftsinc.com. All rights reserved.
 //
 
+import SwiftUI
 import XCTest
 @testable import KitoBiometrics
 
@@ -39,6 +40,11 @@ final class KitoBiometricLockTests: XCTestCase {
 
     func testEveryLockStyleIsListed() {
         XCTAssertEqual(KitoBiometricLockStyle.allCases, [.minimal, .glass, .passcode, .vault])
+    }
+
+    func testAppLockStateDefaultsToUnlocked() {
+        XCTAssertEqual(EnvironmentValues().kitoBiometricAppLockState, .unlocked)
+        XCTAssertEqual(KitoBiometricAppLockState.allCases, [.unlocked, .locked])
     }
 
     func testFaceFrameDrawsFourBrackets() {

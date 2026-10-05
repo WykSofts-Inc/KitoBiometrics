@@ -19,9 +19,6 @@ public enum KitoBiometricResult: Sendable {
     case userCancelled
 }
 
-/// Wraps `LAContext` behind a small async API with a result type that
-/// distinguishes "the user cancelled" from "this device can't do this" from
-/// "wrong face" — three UI treatments that shouldn't share one error string.
 public struct KitoBiometricAuthenticator: KitoBiometricAuthenticating {
     public init() {}
 
@@ -39,18 +36,23 @@ public struct KitoBiometricAuthenticator: KitoBiometricAuthenticating {
         }
     }
 
-    /// `reason` is shown in the system prompt — keep it short and specific
-    /// ("Unlock your account", not "Authenticate").
     public func authenticate(reason: String) async -> KitoBiometricResult {
         let context = LAContext()
         var policyError: NSError?
 
         guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &policyError) else {
+            if policyError?.domain == LAErrorDomain && policyError?.code == LAError.Code.biometryLockout.rawValue {
+                return await evaluate(.deviceOwnerAuthentication, in: context, reason: reason)
+            }
             return .unavailable(reason: policyError?.localizedDescription ?? "Biometric authentication is unavailable")
         }
 
+        return await evaluate(.deviceOwnerAuthenticationWithBiometrics, in: context, reason: reason)
+    }
+
+    private func evaluate(_ policy: LAPolicy, in context: LAContext, reason: String) async -> KitoBiometricResult {
         do {
-            let success = try await context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason)
+            let success = try await context.evaluatePolicy(policy, localizedReason: reason)
             return success ? .success : .failed(reason: "Authentication failed")
         } catch let error as LAError where error.code == .userCancel || error.code == .appCancel {
             return .userCancelled
